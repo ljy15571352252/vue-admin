@@ -46,4 +46,14 @@ export function shortUrlshorturls(shortUrlImportId) {
   })
 }
 
+// 查询短链
+export function exportShortUrlInfo(id) {
+  return request({
+    url: '/api/ShortUrl/ExportShortUrlInfo',
+    method: 'post',
+    params:{
+      id
+    }
+  })
+}
 

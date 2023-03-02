@@ -180,7 +180,7 @@ export default {
     },
     // 点击记录
     clickRecord(row) {
-      this.$refs.clickRecord.openPopup(row.id);
+      this.$refs.clickRecord.openPopup(row);
     },
 
     //下载短连接

@@ -2,9 +2,9 @@
   <div>
     <el-dialog width="1100px" title="点击记录" :visible.sync="dialogFormVisible" :destroy-on-close="true" :close-on-click-modal="false">
       <div>
-<!--        <div>-->
-<!--          <el-button size="mini" type="text">下载点击号码</el-button>-->
-<!--        </div>-->
+        <div>
+          <el-button size="mini" type="primary" @click="exportList" :loading="exportLoading">导 出</el-button>
+        </div>
         <el-table
           v-loading="loading"
           :data="pageList"
@@ -35,6 +35,8 @@
 
 <script>
 import { shortUrlshorturls } from '@/api/task-list';
+import { getToken } from '@/utils/auth'
+import axios from 'axios'
 
 export default {
   data() {
@@ -42,10 +44,13 @@ export default {
       loading:false,
       dialogFormVisible: false,
       tableData: [],
+      tastId: '',
       form: {
         pageIndex: 1,
         pageSize: 10,
-      }
+      },
+      tableName: '',
+      exportLoading: false,
     }
   },
   computed: {
@@ -58,9 +63,48 @@ export default {
   },
 
   methods: {
-    openPopup(id) {
+    // 列表导出
+    exportList() {
+      this.exportLoading = true;
+      axios({
+        method: "post",
+        url:  process.env.VUE_APP_BASE_API + `/api/ShortUrl/ExportShortUrlInfo?id=`+this.tastId,
+        responseType: 'blob', // 或者responseType: 'blob'
+        xsrfHeaderName: 'Authorization',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + getToken(),
+        }
+      }).then(res => {
+        const blob = new Blob([res.data], {
+          type: 'application/vnd.ms-excel'//下载excel 也可下载zip压缩包 application/zip'
+        })
+        /*
+        如需设置文件名称，可以通过a标签属性来设置
+        */
+        let url = window.URL.createObjectURL(blob)//url给a标签使用
+        let link = document.createElement('a')
+        link.style.display = 'none'
+        link.href = url
+        link.setAttribute('download', this.tableName+'-列表')//设置文件名称
+        document.body.appendChild(link)
+        link.click()
+      }).catch(err => {
+        this.$Message.error({
+          type: "error",
+          message: "导出失败!"
+        });
+      })
+        .finally(() =>{
+          this.exportLoading = false;
+        })
+
+    },
+    openPopup(row) {
+      this.tastId = row.id;
+      this.tableName = row.importName;
       this.dialogFormVisible = true;
-      this.getList(id)
+      this.getList(row.id)
     },
     getList(id) {
       this.loading = true,
